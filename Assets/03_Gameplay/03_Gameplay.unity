@@ -122,6 +122,52 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &69168577
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 69168578}
+  - component: {fileID: 69168579}
+  m_Layer: 0
+  m_Name: HeadInputBridge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &69168578
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 69168577}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.23434868, y: 0.42349768, z: -0.04221003}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &69168579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 69168577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0f9d70300faf93419820581bed92107, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  yawThreshold: 0.12
+  pitchSensitivity: 0.025
 --- !u!1 &167206369
 GameObject:
   m_ObjectHideFlags: 0
@@ -501,10 +547,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spriteRenderer: {fileID: 946545501}
-  defaultColor: {r: 1, g: 1, b: 1, a: 1}
-  successColor: {r: 0, g: 1, b: 0, a: 1}
-  failureColor: {r: 1, g: 0, b: 0, a: 1}
-  returnSpeed: 8
+  colorRed: {r: 1, g: 0, b: 0, a: 1}
+  colorWhite: {r: 1, g: 1, b: 1, a: 1}
+  colorBlue: {r: 0, g: 0, b: 1, a: 1}
 --- !u!1 &1725792873
 GameObject:
   m_ObjectHideFlags: 0
@@ -545,6 +590,7 @@ MonoBehaviour:
   perfectCount: 0
   goodCount: 0
   missCount: 0
+  playerColorState: 1
   noteTravelTime: 5
   sheetMusic:
   - time: 5
@@ -674,3 +720,4 @@ SceneRoots:
   - {fileID: 619394802}
   - {fileID: 946545502}
   - {fileID: 1725792875}
+  - {fileID: 69168578}

@@ -89,7 +89,7 @@ public class TrackManager : MonoBehaviour
         Debug.Log($"<color=white>[状态] 切换至模式: {newColor}</color>");
     }
 
-    void HandleHitInput()
+   public void HandleHitInput()
     {
         if (_activeNotes.Count == 0) return;
 
