@@ -2,51 +2,81 @@ using UnityEngine;
 
 public class JudgmentLineController : MonoBehaviour
 {
-    [Header("渲染引用")]
-    [Tooltip("如果不拖拽，脚本会自动尝试获取自身的 SpriteRenderer")]
     public SpriteRenderer spriteRenderer;
+    
+    [Header("各状态底色")]
+    public Color colorRed = Color.red;
+    public Color colorWhite = Color.white;
+    public Color colorBlue = Color.blue;
 
-    [Header("颜色设置")]
-    public Color defaultColor = Color.black;
-    public Color successColor = Color.green;
-    public Color failureColor = Color.red;
-
-    [Header("回弹设置")]
-    [Tooltip("数值越大，颜色变回黑色的速度越快")]
-    public float returnSpeed = 8.0f;
+    private Color _currentBaseColor;
 
     void Awake()
     {
-        // 自动兜底：如果你在 Inspector 里忘了拖组件，代码自己去找
-        if (spriteRenderer == null)
-            spriteRenderer = GetComponent<SpriteRenderer>();
-        
-        // 初始设为黑色
-        spriteRenderer.color = defaultColor;
+        if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    public void SetBaseColor(int type)
+    {
+        if (type == 0) _currentBaseColor = colorRed;
+        else if (type == 1) _currentBaseColor = colorWhite;
+        else _currentBaseColor = colorBlue;
+        spriteRenderer.color = _currentBaseColor;
     }
 
     void Update()
     {
-        // 核心：每帧向黑色插值（回弹逻辑）
-        if (spriteRenderer.color != defaultColor)
+        // 反馈产生的瞬间亮色平滑回归底色
+        if (spriteRenderer.color != _currentBaseColor)
         {
-            spriteRenderer.color = Color.Lerp(
-                spriteRenderer.color, 
-                defaultColor, 
-                Time.deltaTime * returnSpeed
-            );
+            spriteRenderer.color = Color.Lerp(spriteRenderer.color, _currentBaseColor, Time.deltaTime * 12f);
         }
-
-        // 注意：这里我删除了 HandleManualInput，
-        // 因为在接下来的“下落判定”逻辑中，
-        // 变色应该由“判定结果”触发，而不是由按键直接触发。
     }
 
-    /// <summary>
-    /// 核心接口：外部逻辑（比如音符脚本）判定成功或失败后，调用此函数
-    /// </summary>
-    public void TriggerFeedback(bool isSuccess)
+    // ==========================================
+    // 【统一反馈处理入口】
+    // ==========================================
+    public void ApplyJudgment(JudgmentType type)
     {
-        spriteRenderer.color = isSuccess ? successColor : failureColor;
+        switch (type)
+        {
+            case JudgmentType.Perfect:
+                Debug.Log("<color=cyan>[判定反馈] PERFECT! </color>");
+                PerformPerfectEffect();
+                break;
+
+            case JudgmentType.Good:
+                Debug.Log("<color=green>[判定反馈] GOOD </color>");
+                PerformGoodEffect();
+                break;
+
+            case JudgmentType.Miss:
+                Debug.Log("<color=red>[判定反馈] MISS... </color>");
+                PerformMissEffect();
+                break;
+        }
+    }
+
+    // --- 以下是三个独立的表现分支，你可以在这里随心所欲加特效 ---
+
+    private void PerformPerfectEffect()
+    {
+        // 视觉：非常明显的闪烁
+        spriteRenderer.color = _currentBaseColor * 3.5f; 
+        // TODO: 播放 Perfect 音效、生成粒子效果
+    }
+
+    private void PerformGoodEffect()
+    {
+        // 视觉：中等闪烁
+        spriteRenderer.color = _currentBaseColor * 2.0f;
+        // TODO: 播放普通音效
+    }
+
+    private void PerformMissEffect()
+    {
+        // 视觉：不闪烁（以免干扰判断），或者可以让线微微抖动
+        // TODO: 触发震动接口 (HandTracker.Vibrate)
+        // TODO: 播放 Miss 音效
     }
 }

@@ -415,7 +415,7 @@ GameObject:
   - component: {fileID: 946545501}
   - component: {fileID: 946545503}
   m_Layer: 0
-  m_Name: Square
+  m_Name: JudgmentLine
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -482,8 +482,8 @@ Transform:
   m_GameObject: {fileID: 946545500}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.0122, y: -3.87, z: 0}
-  m_LocalScale: {x: 18.606794, y: 0.5604, z: 1}
+  m_LocalPosition: {x: 0.07, y: -4.35, z: 0}
+  m_LocalScale: {x: 18.606794, y: 1.3614919, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -537,16 +537,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spawnPoint: {fileID: 888699458}
   targetPoint: {fileID: 167206370}
-  noteTravelTime: 5
   musicSource: {fileID: 1725792876}
   notePrefab: {fileID: 294500794731946111, guid: 176538da806eb5e4681a5d99acbaa47f, type: 3}
+  judgmentLine: {fileID: 946545503}
+  perfectThreshold: 0.3
+  goodThreshold: 0.5
+  perfectCount: 0
+  goodCount: 0
+  missCount: 0
+  noteTravelTime: 5
   sheetMusic:
   - time: 5
     type: 0
   - time: 10
     type: 1
   - time: 15
-    type: 1
+    type: 2
 --- !u!4 &1725792875
 Transform:
   m_ObjectHideFlags: 0
