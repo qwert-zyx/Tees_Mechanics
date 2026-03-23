@@ -6,8 +6,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 {
     public class HeadPoseAdapter : MonoBehaviour
     {
-        // 核心引用：拖入你的 TrackManager
-        [Header("关联你的游戏脚本")]
+        [Header("关联你的游戏脚本 (别忘了拖拽!)")]
         public TrackManager gameTrackManager; 
 
         [Header("灵敏度校准")]
@@ -19,9 +18,13 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
         void Update()
         {
+            // 1. 找数据源和接收器
             var controller = FindObjectOfType<FaceLandmarkerResultAnnotationController>();
+            
+            // 如果没找到 Controller，或者你忘了把 TrackManager 拖进 Inspector，安全退出
             if (controller == null || gameTrackManager == null) return;
 
+            // 2. 反射获取私有数据包
             var resultField = controller.GetType().GetField("_currentTarget", BindingFlags.NonPublic | BindingFlags.Instance);
             if (resultField == null) return;
 
@@ -29,16 +32,25 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
             if (resultObj == null) return;
 
             var result = (Mediapipe.Tasks.Vision.FaceLandmarker.FaceLandmarkerResult)resultObj;
+            
+            // ==========================================
+            // 【核心防崩溃安全锁】：防止越界报错 (IndexOutOfRange)
+            // ==========================================
+            // 如果当前画面里没检测到脸，或者数据还在加载中，立刻打住，等下一帧
             if (result.faceLandmarks == null || result.faceLandmarks.Count == 0) return;
 
             var landmarks = result.faceLandmarks[0].landmarks;
+            
+            // 二次保险：如果检测到了脸，但 468 个特征点还没完全算出来，也打住
+            if (landmarks == null || landmarks.Count < 468) return;
+
+            // 3. 提取关键特征点 (0:鼻尖, 33:左眼, 263:右眼)
             var nose = landmarks[0];
             var leftEye = landmarks[33];
             var rightEye = landmarks[263];
 
-            // 1. 处理转头 -> 切换颜色
+            // 4. 将面部动作转化为音游输入
             ProcessYaw(nose, leftEye, rightEye);
-            // 2. 处理点头 -> 模拟打击
             ProcessPitch(nose);
         }
 
@@ -46,12 +58,14 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
                         Mediapipe.Tasks.Components.Containers.NormalizedLandmark left, 
                         Mediapipe.Tasks.Components.Containers.NormalizedLandmark right)
         {
+            // 计算鼻尖偏离双眼中心的比例
             float offset = (nose.x - (left.x + right.x) / 2f) / Mathf.Abs(right.x - left.x);
             
-            int targetState = 1; // 默认白
-            if (offset < -yawThreshold) targetState = 0; // 左-红
-            else if (offset > yawThreshold) targetState = 2; // 右-蓝
+            int targetState = 1; // 默认：中（白）
+            if (offset < -yawThreshold) targetState = 0;      // 左转：红
+            else if (offset > yawThreshold) targetState = 2;  // 右转：蓝
 
+            // 只有当状态发生改变时，才通知 TrackManager 变色，避免每帧重复调用
             if (targetState != _lastColorState)
             {
                 gameTrackManager.ChangePlayerColor(targetState);
@@ -61,12 +75,15 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
         void ProcessPitch(Mediapipe.Tasks.Components.Containers.NormalizedLandmark nose)
         {
+            // 计算垂直方向的瞬间爆发速度
             float speed = nose.y - _lastNoseY;
+            
+            // 如果速度超过了设定的灵敏度阈值，视为一次有效“打击”
             if (speed > pitchSensitivity)
             {
-                // 【核心连接】：这里就是触发判定的瞬间！
                 gameTrackManager.HandleHitInput();
             }
+            
             _lastNoseY = nose.y;
         }
     }
