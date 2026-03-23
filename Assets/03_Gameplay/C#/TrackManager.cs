@@ -82,7 +82,7 @@ public class TrackManager : MonoBehaviour
         }
     }
 
-    void ChangePlayerColor(int newColor)
+   public void ChangePlayerColor(int newColor)
     {
         playerColorState = newColor;
         judgmentLine.SetBaseColor(newColor);
