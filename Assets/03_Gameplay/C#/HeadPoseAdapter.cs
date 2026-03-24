@@ -15,6 +15,10 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
         private float _lastNoseY = 0f;
         private int _lastColorState = 1; // 0:红, 1:白, 2:蓝
+    // 【新增】打击冷却控制
+        [Header("打击间隔控制")]
+        public float hitCooldown = 0.2f; // 0.2秒内只允许触发一次
+        private float _nextHitTime = 0f;  // 记录下一次允许打击的时间
 
         void Update()
         {
@@ -75,16 +79,25 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
         void ProcessPitch(Mediapipe.Tasks.Components.Containers.NormalizedLandmark nose)
         {
-            // 计算垂直方向的瞬间爆发速度
-            float speed = nose.y - _lastNoseY;
-            
-            // 如果速度超过了设定的灵敏度阈值，视为一次有效“打击”
-            if (speed > pitchSensitivity)
+        float speed = nose.y - _lastNoseY;
+        // 只有当 速度达标 且 当前时间已经超过了“冷却时间” 时，才触发
+            if (speed > pitchSensitivity && Time.time > _nextHitTime)
             {
-                gameTrackManager.HandleHitInput();
-            }
-            
-            _lastNoseY = nose.y;
+        // 1. 更新下一次允许触发的时间点
+            _nextHitTime = Time.time + hitCooldown;
+
+        // 2. 触发逻辑
+            gameTrackManager.HandleHitInput(); 
+
+            var feedbackMgr = FindObjectOfType<HitFeedbackManager>();
+            if (feedbackMgr != null) {
+            feedbackMgr.TriggerHitFeedback(); 
         }
+        
+        Debug.Log("<color=yellow>有效打击！</color>");
+    }
+    
+    _lastNoseY = nose.y;
+}
     }
 }
