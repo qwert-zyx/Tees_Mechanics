@@ -91,14 +91,17 @@ public class TrackManager : MonoBehaviour
 
    public void HandleHitInput()
     {
-        if (_activeNotes.Count == 0) return;
+        // 1. 如果轨道上一个音符都没有，或者最近的音符太远（空挥）
+        if (_activeNotes.Count == 0 || Mathf.Abs(GetSongTime() - _activeNotes[0].hitTime) > 0.3f) 
+        {
+            // 触发空挥特效（完全透明的 Color.clear）
+            TriggerFeedbackAction(targetPoint.position, Color.clear);
+            return;
+        }
 
         // 永远只判定列表中最前面的音符
         NoteController targetNote = _activeNotes[0];
         float diff = Mathf.Abs(GetSongTime() - targetNote.hitTime);
-
-        // 防误触：如果最近的音符还远在 0.3s 之外，不判定
-        if (diff > 0.3f) return;
 
         // 【核心判定流】
         if (targetNote.noteType == playerColorState) // 颜色对了吗？
@@ -109,8 +112,17 @@ public class TrackManager : MonoBehaviour
         }
         else
         {
-            // 颜色错了，直接 Miss
             ExecuteJudgment(JudgmentType.Miss, targetNote);
+        }
+    }
+
+    // 新增：专门负责呼叫反馈管理器的方法
+    private void TriggerFeedbackAction(Vector3 pos, Color color)
+    {
+        var feedback = FindObjectOfType<HitFeedbackManager>();
+        if (feedback != null)
+        {
+            feedback.TriggerHitFeedback(pos, color);
         }
     }
 
@@ -134,12 +146,19 @@ public class TrackManager : MonoBehaviour
             case JudgmentType.Miss: missCount++; break;
         }
 
-        // 2. 触发反馈接口
+        // 2. 触发判定线本身的变色逻辑
         judgmentLine.ApplyJudgment(type);
 
-        // 3. 回收音符
+        // 3. 【核心新增】根据判定结果决定弹飞的颜色
+        // 如果是 Perfect 或 Good，就是纯白色；如果是 Miss，就是透明色
+        Color flyColor = (type == JudgmentType.Perfect || type == JudgmentType.Good) ? Color.white : Color.clear;
+        
+        // 触发弹飞特效
+        TriggerFeedbackAction(note.transform.position, flyColor);
+
+        // 4. 回收音符
         if (_activeNotes.Contains(note)) _activeNotes.Remove(note);
-        note.Deactivate();
+        note.Deactivate(); // 或者 SetActive(false)
     }
 
     void SpawnNote(NoteData data, int index)
@@ -152,20 +171,19 @@ public class TrackManager : MonoBehaviour
     }
 
    public GameObject GetPooledNote() 
-{
-    // 1. 在你的 _pool 列表里找
-    for (int i = 0; i < _pool.Count; i++) 
-    {
-        // 检查物体是否存在，且目前是隐藏状态（即在池子里闲着）
-        if (_pool[i] != null && !_pool[i].activeInHierarchy) 
-        {
-            return _pool[i];
-        }
-    }
-    
-    // 2. 如果池子里没有可用的，就生成一个新的
-    GameObject newNote = Instantiate(notePrefab);
-    _pool.Add(newNote); // 记得把新生成的也塞进池子里，方便下次复用
-    return newNote;
-}
+   {
+       // 1. 在你的 _pool 列表里找
+       for (int i = 0; i < _pool.Count; i++) 
+       {
+           if (_pool[i] != null && !_pool[i].activeInHierarchy) 
+           {
+               return _pool[i];
+           }
+       }
+       
+       // 2. 如果池子里没有可用的，就生成一个新的
+       GameObject newNote = Instantiate(notePrefab);
+       _pool.Add(newNote); 
+       return newNote;
+   }
 }

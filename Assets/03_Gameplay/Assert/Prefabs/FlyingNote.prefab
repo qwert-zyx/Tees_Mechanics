@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 461769166845715157}
   - component: {fileID: 6955255405979603207}
   - component: {fileID: 4675117773094219235}
+  - component: {fileID: -2817072240987456610}
   m_Layer: 0
   m_Name: FlyingNote
   m_TagString: Untagged
@@ -112,3 +113,18 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &-2817072240987456610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 294500794731946111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: daae45561d232e74ba277802c8b1c050, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  noteIndex: 0
+  hitTime: 0
+  noteType: 0

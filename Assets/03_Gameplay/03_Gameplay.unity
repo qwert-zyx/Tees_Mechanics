@@ -1182,7 +1182,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 888699458}
   targetPoint: {fileID: 167206370}
   musicSource: {fileID: 1725792876}
-  notePrefab: {fileID: 294500794731946111, guid: 176538da806eb5e4681a5d99acbaa47f, type: 3}
+  notePrefab: {fileID: 294500794731946111, guid: 86ecf85d9d631c946a360a341ff03404, type: 3}
   judgmentLine: {fileID: 946545503}
   perfectThreshold: 0.3
   goodThreshold: 0.5
@@ -1194,9 +1194,17 @@ MonoBehaviour:
   sheetMusic:
   - time: 5
     type: 0
-  - time: 10
+  - time: 6
     type: 1
-  - time: 15
+  - time: 7
+    type: 2
+  - time: 8
+    type: 2
+  - time: 9
+    type: 2
+  - time: 10
+    type: 2
+  - time: 11
     type: 2
 --- !u!4 &1725792875
 Transform:

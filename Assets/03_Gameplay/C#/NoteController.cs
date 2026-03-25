@@ -22,9 +22,12 @@ public class NoteController : MonoBehaviour
         noteType = type;
 
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
-        if (type == 0) sr.color = Color.red;
-        else if (type == 1) sr.color = Color.white;
-        else sr.color = Color.blue;
+        if (sr != null)
+        {
+            if (type == 0) sr.color = Color.red;
+            else if (type == 1) sr.color = Color.white;
+            else sr.color = Color.blue;
+        }
 
         _isActive = true;
     }
@@ -34,6 +37,8 @@ public class NoteController : MonoBehaviour
         if (!_isActive || _trackManager == null) return;
 
         float songTime = _trackManager.GetSongTime();
+        
+        // 计算移动进度 (0 到 1)
         float progress = (songTime - (hitTime - _travelTime)) / _travelTime;
         transform.position = Vector3.Lerp(_startPos, _endPos, progress);
 
