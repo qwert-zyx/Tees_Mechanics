@@ -151,11 +151,21 @@ public class TrackManager : MonoBehaviour
         _activeNotes.Add(nc);
     }
 
-    GameObject GetPooledNote()
+   public GameObject GetPooledNote() 
+{
+    // 1. 在你的 _pool 列表里找
+    for (int i = 0; i < _pool.Count; i++) 
     {
-        foreach (var n in _pool) if (!n.activeInHierarchy) return n;
-        GameObject newNote = Instantiate(notePrefab);
-        _pool.Add(newNote);
-        return newNote;
+        // 检查物体是否存在，且目前是隐藏状态（即在池子里闲着）
+        if (_pool[i] != null && !_pool[i].activeInHierarchy) 
+        {
+            return _pool[i];
+        }
     }
+    
+    // 2. 如果池子里没有可用的，就生成一个新的
+    GameObject newNote = Instantiate(notePrefab);
+    _pool.Add(newNote); // 记得把新生成的也塞进池子里，方便下次复用
+    return newNote;
+}
 }

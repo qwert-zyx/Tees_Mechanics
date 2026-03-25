@@ -78,22 +78,29 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
         }
 
         void ProcessPitch(Mediapipe.Tasks.Components.Containers.NormalizedLandmark nose)
+{
+    float speed = nose.y - _lastNoseY;
+    
+    // 冷却控制
+    if (speed > pitchSensitivity && Time.time > _nextHitTime)
+    {
+        _nextHitTime = Time.time + hitCooldown;
+
+        // 1. 触发打击逻辑
+        gameTrackManager.HandleHitInput(); 
+
+        // === [ 【核心修改】连通反馈与坐标 ] ===
+        var feedbackMgr = FindObjectOfType<HitFeedbackManager>();
+        if (feedbackMgr != null) 
         {
-        float speed = nose.y - _lastNoseY;
-        // 只有当 速度达标 且 当前时间已经超过了“冷却时间” 时，才触发
-            if (speed > pitchSensitivity && Time.time > _nextHitTime)
-            {
-        // 1. 更新下一次允许触发的时间点
-            _nextHitTime = Time.time + hitCooldown;
+            // 你需要在 TrackManager 里加个方法，获取当前判定线上的音符坐标。
+            // 这里我们用一个假设的方法 GetCurrentNotePosition()，或者直接用判定线的中心点。
+            // 既然只做一天，我们直接弹飞判定线中心点的音符即可。
+            Vector3 targetPosition = feedbackMgr.judgmentLineTransform.position;
 
-        // 2. 触发逻辑
-            gameTrackManager.HandleHitInput(); 
-
-            var feedbackMgr = FindObjectOfType<HitFeedbackManager>();
-            if (feedbackMgr != null) {
-            feedbackMgr.TriggerHitFeedback(); 
-        }
-        
+            // 调用接收坐标的新接口
+            feedbackMgr.TriggerHitFeedback(targetPosition); 
+        }        
         Debug.Log("<color=yellow>有效打击！</color>");
     }
     

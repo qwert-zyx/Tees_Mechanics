@@ -1126,6 +1126,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameTrackManager: {fileID: 1725792874}
   judgmentLineTransform: {fileID: 946545502}
+  flyingNotePrefab: {fileID: 294500794731946111, guid: 176538da806eb5e4681a5d99acbaa47f, type: 3}
+  flyExplosionForce: 20
+  maxFlyAngleOffset: 30
   swellMultiplier: 1.1
   swellDuration: 0.05
   decayDuration: 0.05
