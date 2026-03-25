@@ -1,9 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// ==========================================
-// 1. 全局判定等级枚举 (放在类外面即可全局访问)
-// ==========================================
 public enum JudgmentType
 {
     Perfect,
@@ -19,12 +16,17 @@ public class NoteData {
 
 public class TrackManager : MonoBehaviour
 {
-    [Header("引用")]
+    [Header("核心引用")]
     public Transform spawnPoint;
     public Transform targetPoint;
     public AudioSource musicSource;
     public GameObject notePrefab;
     public JudgmentLineController judgmentLine;
+
+    [Header("判定文字设置 (工厂模式)")]
+    public GameObject judgmentPrefab;  // 拖入 Project 里的判定文字 Prefab
+    public Transform judgmentParent;    // 拖入场景里的 Canvas
+    public Vector2 randomRange = new Vector2(50f, 30f); // 弹出位置的随机偏移量
 
     [Header("判定阈值 (秒)")]
     public float perfectThreshold = 0.05f; 
@@ -53,24 +55,23 @@ public class TrackManager : MonoBehaviour
         if (musicSource != null) musicSource.Play();
         
         // 初始化判定线颜色
-        judgmentLine.SetBaseColor(playerColorState);
+        if (judgmentLine != null) judgmentLine.SetBaseColor(playerColorState);
     }
 
-    // 获取当前歌曲播放的相对时间
     public float GetSongTime() => (float)(AudioSettings.dspTime - _songStartTime);
 
     void Update()
     {
         float songTime = GetSongTime();
 
-        // 1. 自动生成逻辑
+        // 1. 自动生成音符逻辑
         if (_nextNoteIndex < sheetMusic.Count && songTime >= sheetMusic[_nextNoteIndex].time - noteTravelTime)
         {
             SpawnNote(sheetMusic[_nextNoteIndex], _nextNoteIndex);
             _nextNoteIndex++;
         }
 
-        // 2. 切换颜色状态输入 (QWE)
+        // 2. 切换颜色状态输入
         if (Input.GetKeyDown(KeyCode.Q)) ChangePlayerColor(0);
         if (Input.GetKeyDown(KeyCode.W)) ChangePlayerColor(1);
         if (Input.GetKeyDown(KeyCode.E)) ChangePlayerColor(2);
@@ -82,64 +83,46 @@ public class TrackManager : MonoBehaviour
         }
     }
 
-   public void ChangePlayerColor(int newColor)
+    // 切换颜色逻辑
+    public void ChangePlayerColor(int newColor)
     {
         playerColorState = newColor;
-        judgmentLine.SetBaseColor(newColor);
-        Debug.Log($"<color=white>[状态] 切换至模式: {newColor}</color>");
+        if (judgmentLine != null) judgmentLine.SetBaseColor(newColor);
     }
 
-   public void HandleHitInput()
+    // 处理主动击打
+    public void HandleHitInput()
     {
-        // 1. 如果轨道上一个音符都没有，或者最近的音符太远（空挥）
+        // 情况 A：空挥（轨道没音符，或最近的音符太远）
         if (_activeNotes.Count == 0 || Mathf.Abs(GetSongTime() - _activeNotes[0].hitTime) > 0.3f) 
         {
-            // 触发空挥特效（完全透明的 Color.clear）
             TriggerFeedbackAction(targetPoint.position, Color.clear);
+            TriggerCameraShake(); 
+            SpawnJudgmentText("MISS", Color.gray);
             return;
         }
 
-        // 永远只判定列表中最前面的音符
+        // 情况 B：正常判定区域内有音符
         NoteController targetNote = _activeNotes[0];
         float diff = Mathf.Abs(GetSongTime() - targetNote.hitTime);
 
-        // 【核心判定流】
-        if (targetNote.noteType == playerColorState) // 颜色对了吗？
+        if (targetNote.noteType == playerColorState) 
         {
             if (diff <= perfectThreshold) ExecuteJudgment(JudgmentType.Perfect, targetNote);
             else if (diff <= goodThreshold) ExecuteJudgment(JudgmentType.Good, targetNote);
-            else ExecuteJudgment(JudgmentType.Miss, targetNote); // 颜色对但时机太歪
+            else ExecuteJudgment(JudgmentType.Miss, targetNote); 
         }
         else
         {
+            // 颜色对不上，直接判定为 Miss
             ExecuteJudgment(JudgmentType.Miss, targetNote);
         }
     }
 
-    // 新增：专门负责呼叫反馈管理器的方法
-    private void TriggerFeedbackAction(Vector3 pos, Color color)
-    {
-        var feedback = FindObjectOfType<HitFeedbackManager>();
-        if (feedback != null)
-        {
-            feedback.TriggerHitFeedback(pos, color);
-        }
-    }
-
-    // 供 Note 调用的被动 Miss
-    public void HandlePassiveMiss(NoteController note)
-    {
-        if (_activeNotes.Contains(note))
-        {
-            // 【核心修改】：加一个 true，告诉总出口这是“被动漏掉的”
-            ExecuteJudgment(JudgmentType.Miss, note, true); 
-        }
-    }
-
-    // 【核心入口】：统一分发计数、反馈、移除逻辑
+    // 统一判定处理出口
     private void ExecuteJudgment(JudgmentType type, NoteController note, bool isPassive = false)
     {
-        // 1. 统计数据 (保持不变)
+        // 1. 统计数据
         switch (type)
         {
             case JudgmentType.Perfect: perfectCount++; break;
@@ -147,29 +130,84 @@ public class TrackManager : MonoBehaviour
             case JudgmentType.Miss: missCount++; break;
         }
 
-        // 2. 触发判定线本身的变色逻辑 (保持不变)
         if (judgmentLine != null) judgmentLine.ApplyJudgment(type);
 
-        // ==========================================
-        // 3. 【核心新增：如果是主动击打，才放特效和声音！】
-        // ==========================================
+        // 2. 只有非被动（主动击打）才触发反馈
         if (!isPassive) 
         {
-            Color flyColor = Color.clear;
+            string judgeText = "";
+            Color judgeColor = Color.white;
 
+            switch (type)
+            {
+                case JudgmentType.Perfect: 
+                    judgeText = "PERFECT"; 
+                    judgeColor = new Color(1f, 0.85f, 0f); 
+                    break;
+                case JudgmentType.Good: 
+                    judgeText = "GOOD"; 
+                    judgeColor = Color.green; 
+                    break;
+                case JudgmentType.Miss: 
+                    judgeText = "MISS"; 
+                    judgeColor = Color.gray; 
+                    TriggerCameraShake(); // 打错时震屏
+                    break;
+            }
+
+            // 弹出判定文字
+            SpawnJudgmentText(judgeText, judgeColor);
+
+            // 处理音符弹飞颜色
+            Color flyColor = Color.clear;
             if (type == JudgmentType.Perfect || type == JudgmentType.Good)
             {
                 SpriteRenderer sr = note.GetComponent<SpriteRenderer>();
                 if (sr != null) flyColor = sr.color; 
             }
 
-            // 触发飞出特效
             TriggerFeedbackAction(note.transform.position, flyColor);
         }
 
-        // 4. 回收音符 (保持不变)
+        // 3. 移除并回收
         if (_activeNotes.Contains(note)) _activeNotes.Remove(note);
         note.Deactivate(); 
+    }
+
+    // 工厂函数：生成判定文字
+    private void SpawnJudgmentText(string text, Color color)
+    {
+        if (judgmentPrefab != null && judgmentParent != null)
+        {
+            GameObject go = Instantiate(judgmentPrefab, judgmentParent);
+            
+            // 随机位移偏移
+            Vector2 offset = new Vector2(
+                Random.Range(-randomRange.x, randomRange.x),
+                Random.Range(-randomRange.y, randomRange.y)
+            );
+
+            var display = go.GetComponent<JudgmentDisplay>();
+            if(display != null) display.Init(text, color, offset);
+        }
+    }
+
+    // 助手方法
+    private void TriggerFeedbackAction(Vector3 pos, Color color)
+    {
+        var feedback = FindObjectOfType<HitFeedbackManager>();
+        if (feedback != null) feedback.TriggerHitFeedback(pos, color);
+    }
+
+    private void TriggerCameraShake()
+    {
+        var feedback = FindObjectOfType<HitFeedbackManager>();
+        if (feedback != null) feedback.TriggerMissShake();
+    }
+
+    public void HandlePassiveMiss(NoteController note)
+    {
+        if (_activeNotes.Contains(note)) ExecuteJudgment(JudgmentType.Miss, note, true); 
     }
 
     void SpawnNote(NoteData data, int index)
@@ -181,20 +219,14 @@ public class TrackManager : MonoBehaviour
         _activeNotes.Add(nc);
     }
 
-   public GameObject GetPooledNote() 
-   {
-       // 1. 在你的 _pool 列表里找
-       for (int i = 0; i < _pool.Count; i++) 
-       {
-           if (_pool[i] != null && !_pool[i].activeInHierarchy) 
-           {
-               return _pool[i];
-           }
-       }
-       
-       // 2. 如果池子里没有可用的，就生成一个新的
-       GameObject newNote = Instantiate(notePrefab);
-       _pool.Add(newNote); 
-       return newNote;
-   }
+    public GameObject GetPooledNote() 
+    {
+        for (int i = 0; i < _pool.Count; i++) 
+        {
+            if (_pool[i] != null && !_pool[i].activeInHierarchy) return _pool[i];
+        }
+        GameObject newNote = Instantiate(notePrefab);
+        _pool.Add(newNote); 
+        return newNote;
+    }
 }

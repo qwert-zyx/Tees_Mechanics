@@ -7,6 +7,12 @@ public class HitFeedbackManager : MonoBehaviour
     [Header("关联你的物体")]
     public TrackManager gameTrackManager;
     public Transform judgmentLineTransform; 
+
+    // === [ 震屏设置 (新增) ] ===
+    [Header("震屏设置 (空挥/Miss时触发)")]
+    public Camera mainCamera;
+    public float shakeDuration = 0.1f;    // 震动持续时间 
+    public float shakeMagnitude = 0.1f;   // 震动幅度 (可根据手感微调)
     
     // === [ 弹飞特效设置 ] ===
     [Header("音符弹飞设置")]
@@ -14,7 +20,7 @@ public class HitFeedbackManager : MonoBehaviour
     public float flyExplosionForce = 10f; 
     [Range(0f, 60f)] public float maxFlyAngleOffset = 30f; 
 
-    // === [ 其他设置 ] ===
+    // === [ 旧版膨胀和音效设置 ] ===
     [Header("旧版膨胀和音效设置")]
     [Range(1.0f, 1.3f)] public float swellMultiplier = 1.1f; 
     public float swellDuration = 0.05f;
@@ -25,17 +31,23 @@ public class HitFeedbackManager : MonoBehaviour
     private Vector3 _originalScale;
     private Coroutine _swellCoroutine;
 
+    private Vector3 _originalCameraPos;
+    private Coroutine _shakeCoroutine;
+
     void Start()
     {
         if (judgmentLineTransform != null) _originalScale = judgmentLineTransform.localScale;
+
+        // 获取主摄像机初始位置，用于震屏归位
+        if (mainCamera == null) mainCamera = Camera.main;
+        if (mainCamera != null) _originalCameraPos = mainCamera.transform.localPosition;
     }
 
-    // === [ 重点修改：增加了 Color targetColor 参数 ] ===
+    // === [ 接口 1：处理击中与弹飞 ] ===
     public void TriggerHitFeedback(Vector3 hitPosition, Color targetColor)
     {
         TriggerSwell();
         PlayHitSound();
-        // 传递颜色给弹飞逻辑
         TriggerNoteFlying(hitPosition, targetColor);
     }
 
@@ -69,17 +81,19 @@ public class HitFeedbackManager : MonoBehaviour
 
     private void PlayHitSound()
     {
-        if (hitAudioSource != null && hitSoundClip != null) hitAudioSource.PlayOneShot(hitSoundClip);
+        if (hitAudioSource != null && hitSoundClip != null)
+        {
+            hitAudioSource.PlayOneShot(hitSoundClip);
+        }
     }
 
-    // === [ 重点修改：改变替身颜色 ] ===
     private void TriggerNoteFlying(Vector3 hitPosition, Color targetColor)
     {
         if (flyingNotePrefab == null) return;
 
         GameObject flyingNote = Instantiate(flyingNotePrefab, hitPosition, Quaternion.identity);
         
-        // 【核心新增】改变音符的颜色！
+        // 改变特效音符颜色
         SpriteRenderer sr = flyingNote.GetComponent<SpriteRenderer>();
         if (sr != null) 
         {
@@ -94,5 +108,32 @@ public class HitFeedbackManager : MonoBehaviour
             rb.AddForce(flyDirection * flyExplosionForce, ForceMode2D.Impulse);
             rb.AddTorque(Random.Range(-50f, 50f));
         }
+    }
+
+    // === [ 接口 2：处理失误震屏 ] ===
+    public void TriggerMissShake()
+    {
+        if (mainCamera == null) return;
+        
+        if (_shakeCoroutine != null) StopCoroutine(_shakeCoroutine);
+        _shakeCoroutine = StartCoroutine(ShakeProcess());
+    }
+
+    private IEnumerator ShakeProcess()
+    {
+        float elapsed = 0f;
+
+        while (elapsed < shakeDuration)
+        {
+            float x = Random.Range(-1f, 1f) * shakeMagnitude;
+            float y = Random.Range(-1f, 1f) * shakeMagnitude;
+
+            mainCamera.transform.localPosition = new Vector3(_originalCameraPos.x + x, _originalCameraPos.y + y, _originalCameraPos.z);
+            
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        
+        mainCamera.transform.localPosition = _originalCameraPos;
     }
 }

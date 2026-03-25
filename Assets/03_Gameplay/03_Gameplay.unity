@@ -641,6 +641,10 @@ PrefabInstance:
       propertyPath: m_RenderMode
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8571076842338426122, guid: 140d1d2c406167c50819d89f86d9092e, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 8571076842338426133, guid: 140d1d2c406167c50819d89f86d9092e, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -798,6 +802,9 @@ PrefabInstance:
     - {fileID: 8571076843876106078, guid: 140d1d2c406167c50819d89f86d9092e, type: 3}
     - {fileID: 8571076842341243440, guid: 140d1d2c406167c50819d89f86d9092e, type: 3}
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 8571076842338426133, guid: 140d1d2c406167c50819d89f86d9092e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1229579324}
     - targetCorrespondingSourceObject: {fileID: 8571076844135231236, guid: 140d1d2c406167c50819d89f86d9092e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 666499701}
@@ -1126,6 +1133,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameTrackManager: {fileID: 1725792874}
   judgmentLineTransform: {fileID: 946545502}
+  mainCamera: {fileID: 0}
+  shakeDuration: 0.1
+  shakeMagnitude: 0.1
   flyingNotePrefab: {fileID: 294500794731946111, guid: 176538da806eb5e4681a5d99acbaa47f, type: 3}
   flyExplosionForce: 20
   maxFlyAngleOffset: 30
@@ -1149,6 +1159,46 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1229579323
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1229579324}
+  m_Layer: 5
+  m_Name: JudgmentContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1229579324
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1229579323}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1659164155}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 734, y: 423}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!224 &1659164155 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 8571076842338426133, guid: 140d1d2c406167c50819d89f86d9092e, type: 3}
+  m_PrefabInstance: {fileID: 661625811}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1725792873
 GameObject:
   m_ObjectHideFlags: 0
@@ -1184,6 +1234,9 @@ MonoBehaviour:
   musicSource: {fileID: 1725792876}
   notePrefab: {fileID: 294500794731946111, guid: 86ecf85d9d631c946a360a341ff03404, type: 3}
   judgmentLine: {fileID: 946545503}
+  judgmentPrefab: {fileID: 4681014887770701301, guid: 81892acb994ca1549946947409b6c559, type: 3}
+  judgmentParent: {fileID: 1229579324}
+  randomRange: {x: 50, y: 30}
   perfectThreshold: 0.3
   goodThreshold: 0.5
   perfectCount: 0
