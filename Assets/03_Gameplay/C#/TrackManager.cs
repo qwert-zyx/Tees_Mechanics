@@ -131,53 +131,46 @@ public class TrackManager : MonoBehaviour
     {
         if (_activeNotes.Contains(note))
         {
-            ExecuteJudgment(JudgmentType.Miss, note);
+            // 【核心修改】：加一个 true，告诉总出口这是“被动漏掉的”
+            ExecuteJudgment(JudgmentType.Miss, note, true); 
         }
     }
 
     // 【核心入口】：统一分发计数、反馈、移除逻辑
-    private void ExecuteJudgment(JudgmentType type, NoteController note)
-{
-    // 1. 原有的统计数据 (Perfect Count++ 等)
-    switch (type)
+    private void ExecuteJudgment(JudgmentType type, NoteController note, bool isPassive = false)
     {
-        case JudgmentType.Perfect: perfectCount++; break;
-        case JudgmentType.Good: goodCount++; break;
-        case JudgmentType.Miss: missCount++; break;
-    }
-
-    // 2. 原有的触发判定线变色逻辑 (判定线闪白、闪黄等)
-    if (judgmentLine != null) judgmentLine.ApplyJudgment(type);
-
-    // ==========================================
-    // 3. 【核心新增：动态获取原生颜色】
-    // ==========================================
-    // 我们定义一个要飞出去的颜色变量，默认为完全透明 (Color.clear)
-    Color flyColor = Color.clear;
-
-    // 只有打准了 (Perfect 或 Good)，才飞特效
-    if (type == JudgmentType.Perfect || type == JudgmentType.Good)
-    {
-        // === [ 原来的写法 (硬编码白色) ] ===
-        // flyColor = Color.white; 
-
-        // === [ 现在的写法 (激活预留接口，获取原生颜色) ] ===
-        // 我们从被击中的音符身上动态拿到它的 SpriteRenderer，然后读取它的颜色！
-        SpriteRenderer sr = note.GetComponent<SpriteRenderer>();
-        if (sr != null)
+        // 1. 统计数据 (保持不变)
+        switch (type)
         {
-            // 拿到音符本来的颜色 (比如红、白、蓝)
-            flyColor = sr.color; 
+            case JudgmentType.Perfect: perfectCount++; break;
+            case JudgmentType.Good: goodCount++; break;
+            case JudgmentType.Miss: missCount++; break;
         }
+
+        // 2. 触发判定线本身的变色逻辑 (保持不变)
+        if (judgmentLine != null) judgmentLine.ApplyJudgment(type);
+
+        // ==========================================
+        // 3. 【核心新增：如果是主动击打，才放特效和声音！】
+        // ==========================================
+        if (!isPassive) 
+        {
+            Color flyColor = Color.clear;
+
+            if (type == JudgmentType.Perfect || type == JudgmentType.Good)
+            {
+                SpriteRenderer sr = note.GetComponent<SpriteRenderer>();
+                if (sr != null) flyColor = sr.color; 
+            }
+
+            // 触发飞出特效
+            TriggerFeedbackAction(note.transform.position, flyColor);
+        }
+
+        // 4. 回收音符 (保持不变)
+        if (_activeNotes.Contains(note)) _activeNotes.Remove(note);
+        note.Deactivate(); 
     }
-
-    // 4. 触发飞出特效 (将动态拿到的颜色传过去)
-    TriggerFeedbackAction(note.transform.position, flyColor);
-
-    // 5. 回收音符逻辑
-    if (_activeNotes.Contains(note)) _activeNotes.Remove(note);
-    note.Deactivate();
-}
 
     void SpawnNote(NoteData data, int index)
     {
