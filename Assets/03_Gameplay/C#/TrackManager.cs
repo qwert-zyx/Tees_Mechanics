@@ -137,29 +137,47 @@ public class TrackManager : MonoBehaviour
 
     // 【核心入口】：统一分发计数、反馈、移除逻辑
     private void ExecuteJudgment(JudgmentType type, NoteController note)
+{
+    // 1. 原有的统计数据 (Perfect Count++ 等)
+    switch (type)
     {
-        // 1. 统计数据
-        switch (type)
-        {
-            case JudgmentType.Perfect: perfectCount++; break;
-            case JudgmentType.Good: goodCount++; break;
-            case JudgmentType.Miss: missCount++; break;
-        }
-
-        // 2. 触发判定线本身的变色逻辑
-        judgmentLine.ApplyJudgment(type);
-
-        // 3. 【核心新增】根据判定结果决定弹飞的颜色
-        // 如果是 Perfect 或 Good，就是纯白色；如果是 Miss，就是透明色
-        Color flyColor = (type == JudgmentType.Perfect || type == JudgmentType.Good) ? Color.white : Color.clear;
-        
-        // 触发弹飞特效
-        TriggerFeedbackAction(note.transform.position, flyColor);
-
-        // 4. 回收音符
-        if (_activeNotes.Contains(note)) _activeNotes.Remove(note);
-        note.Deactivate(); // 或者 SetActive(false)
+        case JudgmentType.Perfect: perfectCount++; break;
+        case JudgmentType.Good: goodCount++; break;
+        case JudgmentType.Miss: missCount++; break;
     }
+
+    // 2. 原有的触发判定线变色逻辑 (判定线闪白、闪黄等)
+    if (judgmentLine != null) judgmentLine.ApplyJudgment(type);
+
+    // ==========================================
+    // 3. 【核心新增：动态获取原生颜色】
+    // ==========================================
+    // 我们定义一个要飞出去的颜色变量，默认为完全透明 (Color.clear)
+    Color flyColor = Color.clear;
+
+    // 只有打准了 (Perfect 或 Good)，才飞特效
+    if (type == JudgmentType.Perfect || type == JudgmentType.Good)
+    {
+        // === [ 原来的写法 (硬编码白色) ] ===
+        // flyColor = Color.white; 
+
+        // === [ 现在的写法 (激活预留接口，获取原生颜色) ] ===
+        // 我们从被击中的音符身上动态拿到它的 SpriteRenderer，然后读取它的颜色！
+        SpriteRenderer sr = note.GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            // 拿到音符本来的颜色 (比如红、白、蓝)
+            flyColor = sr.color; 
+        }
+    }
+
+    // 4. 触发飞出特效 (将动态拿到的颜色传过去)
+    TriggerFeedbackAction(note.transform.position, flyColor);
+
+    // 5. 回收音符逻辑
+    if (_activeNotes.Contains(note)) _activeNotes.Remove(note);
+    note.Deactivate();
+}
 
     void SpawnNote(NoteData data, int index)
     {
