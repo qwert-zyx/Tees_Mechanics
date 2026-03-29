@@ -2,12 +2,8 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using System.Collections.Generic; // 必须引入这个来使用 List
+using System.Collections.Generic; 
 
-// ==========================================
-// 【新增】：自定义评语规则类
-// 加上 Serializable 标签，它就能在 Unity 的 Inspector 里显示出来了！
-// ==========================================
 [System.Serializable]
 public class CommentRule
 {
@@ -37,21 +33,28 @@ public class ResultManager : MonoBehaviour
     public TextMeshProUGUI nextLevelButtonText; 
 
     // ==========================================
-    // 2. 文案配置区 (支持无限扩展！)
+    // 2. 场景跳转配置 (新增：方便你改名字)
+    // ==========================================
+    [Header("场景跳转配置")]
+    
+    [Tooltip("主菜单场景的文件名。请确保这个名字和 Build Settings 里的场景名完全一致！")]
+    public string mainMenuSceneName = "MainMenu";
+
+    // ==========================================
+    // 3. 文案配置区
     // ==========================================
     [Header("结算数据文案前缀")]
     public string scorePrefix = "最终得分: ";       
     public string comboPrefix = "最高连击: ";       
     public string missPrefix = "漏接数量: ";        
 
-    [Header("评语规则配置表 (请在面板里从大到小排列)")]
-    // 我为你预设了四个等级，你可以随时在 Unity 面板里增加或修改
+    [Header("评语规则配置表 (英文版 Meme)")]
     public List<CommentRule> commentRules = new List<CommentRule>()
     {
-        new CommentRule { minMisses = 11, commentTemplate = "漏了 {0} 个！后宫佳丽三千，海王非你莫属！" },
-        new CommentRule { minMisses = 4,  commentTemplate = "漏了 {0} 个！常客！你这属于办了年卡的。" },
-        new CommentRule { minMisses = 1,  commentTemplate = "漏了 {0} 个！逢场作戏，仅有几面之缘的小姐。" },
-        new CommentRule { minMisses = 0,  commentTemplate = "完美！{0} 漏接，洁身自好！" }
+        new CommentRule { minMisses = 11, commentTemplate = "You got {0} misses! Certified Lover Boy. You're building a whole harem out here!" },
+        new CommentRule { minMisses = 4,  commentTemplate = "You got {0} misses! Bro is a VIP regular. Do you have a monthly subscription?" },
+        new CommentRule { minMisses = 1,  commentTemplate = "You got {0} misses! Just a casual flirt. We all make mistakes in the heat of passion." },
+        new CommentRule { minMisses = 0,  commentTemplate = "Perfect! {0} misses. Pure, loyal, and absolutely BASED." }
     };
 
     [Header("动态按钮文案")]
@@ -65,43 +68,32 @@ public class ResultManager : MonoBehaviour
         if (resultPanel != null) resultPanel.SetActive(false);
     }
 
-    // ==========================================
-    // 核心接口：接收数据并展示
-    // ==========================================
     public void ShowResult(int score, int maxCombo, int missCount, LevelData nextLevel)
     {
         _nextLevelData = nextLevel;
-        
         if (resultPanel != null) resultPanel.SetActive(true);
 
         if (finalScoreText != null) finalScoreText.text = $"{scorePrefix}{score:N0}";
         if (maxComboText != null) maxComboText.text = $"{comboPrefix}{maxCombo}";
-        if (missCountText != null) missCountText.text = $"{missPrefix}{missCount}";
+        if (missCountText != null) missPrefixTextUpdate(missCount);
 
-        // ==========================================
-        // 【核心改动】：动态匹配评语与数量填坑
-        // ==========================================
+        // 评语逻辑
         if (commentText != null)
         {
-            // 先按要求的数量从大到小排序，确保高难度的评语优先触发
             commentRules.Sort((a, b) => b.minMisses.CompareTo(a.minMisses));
-
             string finalComment = "";
-            // 遍历我们配置的规则表
             foreach (var rule in commentRules)
             {
-                // 只要实际漏接数“大于等于”规则要求的值，就采用这条评语
                 if (missCount >= rule.minMisses)
                 {
-                    // string.Format 会自动把 rule.commentTemplate 里的 {0} 替换成 missCount
                     finalComment = string.Format(rule.commentTemplate, missCount);
-                    break; // 找到了就立刻停下
+                    break;
                 }
             }
             commentText.text = finalComment;
         }
 
-        // 处理下一关按钮状态
+        // 按钮文字处理
         if (nextLevelButton != null && nextLevelButtonText != null)
         {
             nextLevelButton.gameObject.SetActive(true); 
@@ -110,9 +102,16 @@ public class ResultManager : MonoBehaviour
         }
     }
 
+    // 内部辅助显示
+    private void missPrefixTextUpdate(int count)
+    {
+        if (missCountText != null) missCountText.text = $"{missPrefix}{count}";
+    }
+
     // ==========================================
-    // 按钮绑定的功能区
+    // 按钮功能区 (现在全部使用配置的场景名)
     // ==========================================
+    
     public void Btn_RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name); 
@@ -120,7 +119,8 @@ public class ResultManager : MonoBehaviour
 
     public void Btn_ReturnToMenu() 
     {
-        SceneManager.LoadScene("MainMenu"); 
+        // 使用面板里配置的名字进行跳转
+        SceneManager.LoadScene(mainMenuSceneName); 
     }
 
     public void Btn_LoadNextLevel()
@@ -130,6 +130,10 @@ public class ResultManager : MonoBehaviour
             GameDataManager.SelectedLevel = _nextLevelData;
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
-        else SceneManager.LoadScene("MainMenu");
+        else 
+        {
+            // 如果没有下一关了，也跳回主菜单
+            SceneManager.LoadScene(mainMenuSceneName);
+        }
     }
 }

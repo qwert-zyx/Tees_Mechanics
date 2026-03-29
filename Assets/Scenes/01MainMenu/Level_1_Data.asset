@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Level_1_Data
   m_EditorClassIdentifier: 
   levelName: Level1
-  musicClip: {fileID: 8300000, guid: a900dfc91315a684ea615d3b24d1f972, type: 3}
+  musicClip: {fileID: 8300000, guid: 4a0b2336356d92e49a3eceadf0d6b420, type: 3}
   notes:
   - time: 5
     type: 1
@@ -30,3 +30,4 @@ MonoBehaviour:
   - time: 11
     type: 1
   nextLevel: {fileID: 11400000, guid: fcbefc8ba77103c4bbd6c0555ad60f40, type: 2}
+  isTutorial: 1

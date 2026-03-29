@@ -7,9 +7,10 @@ public class LevelData : ScriptableObject
     public string levelName;      
     public AudioClip musicClip;   
     public List<NoteData> notes;  
-    
-    // 【新增】：这一关打完后，下一关是谁？
     public LevelData nextLevel;   
+    
+    // 【新增】：这关是否需要触发新手引导？
+    public bool isTutorial = false; 
 }
 
 [System.Serializable]
