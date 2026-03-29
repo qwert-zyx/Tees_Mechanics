@@ -1,49 +1,75 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // 必须有这个才能切场景
+using UnityEngine.SceneManagement;
 
 public class MainMenuManager : MonoBehaviour
 {
-    [Header("面板引用")]
-    public GameObject mainMenuPanel;    // 拖入主菜单面板
-    public GameObject levelSelectPanel; // 拖入选关面板
+    // ==========================================
+    // 1. UI 面板引用区 (连线双保险)
+    // ==========================================
+    [Header("UI 面板引用")]
+    [Tooltip("主菜单面板 (装着开始、退出按钮的那个)")]
+    public GameObject mainMenuPanel; 
 
-    // --- 1. 面板切换逻辑 ---
+    [Tooltip("选关面板 (装着第一关、第二关按钮的那个)")]
+    public GameObject levelSelectPanel; 
 
-    // 点击“开始游戏”时调用
+    // ==========================================
+    // 2. 场景跳转配置
+    // ==========================================
+    [Header("场景跳转配置")]
+    public string gameplaySceneName = "GameplayScene";
+
+    // ==========================================
+    // 3. 初始化：开局只留“大门”
+    // ==========================================
+    void Start()
+    {
+        // 游戏启动：主菜单开，选关面板关
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
+        if (levelSelectPanel != null) levelSelectPanel.SetActive(false);
+    }
+
+    // ==========================================
+    // 4. 面板切换逻辑 (跷跷板算法)
+    // ==========================================
+
+    /// <summary>
+    /// 【开启选关】：隐藏主菜单，显示选关
+    /// </summary>
     public void OpenLevelSelect()
     {
-        if (mainMenuPanel != null) mainMenuPanel.SetActive(false);    
-        if (levelSelectPanel != null) levelSelectPanel.SetActive(true);  
+        Debug.Log("【UI 切换】进入选关界面");
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(false); // 隐藏自己
+        if (levelSelectPanel != null) levelSelectPanel.SetActive(true); // 开启对方
     }
 
-    // 点击“返回”时调用
-    public void BackToMainMenu()
+    /// <summary>
+    /// 【返回主菜单】：隐藏选关，显示主菜单
+    /// </summary>
+    public void CloseLevelSelect()
     {
-        if (mainMenuPanel != null) mainMenuPanel.SetActive(true);     
-        if (levelSelectPanel != null) levelSelectPanel.SetActive(false); 
+        Debug.Log("【UI 切换】返回主菜单");
+        if (levelSelectPanel != null) levelSelectPanel.SetActive(false); // 隐藏选关
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(true); // 重新显示主菜单
     }
 
-    // --- 2. 关卡跳转逻辑（数据驱动高级版） ---
-
-    // 选关按钮调用，接收一张关卡档案卡
+    // ==========================================
+    // 5. 核心：选关并加载 (逻辑不变)
+    // ==========================================
     public void SelectAndLoadLevel(LevelData levelToLoad)
     {
-        // 1. 把选中的卡片存进全局“存包柜”
+        if (levelToLoad == null) return;
+
+        // 只要是从主菜单主动进的，就得先看教学
+        GameDataManager.SkipTutorialTemp = false; 
         GameDataManager.SelectedLevel = levelToLoad;
-        
-        // 2. 跳转到唯一的游戏场景 (确保名字和你的场景名一模一样)
-        SceneManager.LoadScene("03_Gameplay"); 
+
+        if (!string.IsNullOrEmpty(gameplaySceneName))
+            SceneManager.LoadScene(gameplaySceneName);
     }
 
-    // --- 3. 退出逻辑 ---
     public void QuitGame()
     {
-        Debug.Log("玩家点击了退出按钮！");
-
-        #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-        #else
         Application.Quit();
-        #endif
     }
 }

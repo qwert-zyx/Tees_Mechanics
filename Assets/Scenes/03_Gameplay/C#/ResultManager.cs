@@ -119,7 +119,8 @@ public class ResultManager : MonoBehaviour
 
     public void Btn_ReturnToMenu() 
     {
-        // 使用面板里配置的名字进行跳转
+        // 返回菜单时也重置一下，确保下次进来还能看到教学
+        GameDataManager.SkipTutorialTemp = false;
         SceneManager.LoadScene(mainMenuSceneName); 
     }
 
