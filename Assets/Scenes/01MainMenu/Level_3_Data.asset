@@ -12,9 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed55d8b908cb8624db1ffd0a80684588, type: 3}
   m_Name: Level_3_Data
   m_EditorClassIdentifier: 
-  levelName: Level1
-  musicClip: {fileID: 0}
+  levelName: Level3
+  musicClip: {fileID: 8300000, guid: a05f147fdd4fe00469216b381a1db6bd, type: 3}
   notes:
+  - time: 2
+    type: 1
+  - time: 3
+    type: 2
+  - time: 0
+    type: 0
+  - time: 4
+    type: 3
+  - time: 5
+    type: 3
+  - time: 6
+    type: 2
+  - time: 7
+    type: 1
   - time: 0
     type: 0
   - time: 0
@@ -41,17 +55,5 @@ MonoBehaviour:
     type: 0
   - time: 0
     type: 0
-  - time: 0
-    type: 0
-  - time: 0
-    type: 0
-  - time: 0
-    type: 0
-  - time: 0
-    type: 0
-  - time: 0
-    type: 0
-  - time: 0
-    type: 0
-  - time: 0
-    type: 0
+  nextLevel: {fileID: 0}
+  isTutorial: 0
