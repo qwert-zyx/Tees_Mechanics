@@ -194,6 +194,7 @@ public class TrackManager : MonoBehaviour
             else ExecuteJudgment(JudgmentType.Miss, targetNote); 
         }
         else ExecuteJudgment(JudgmentType.Miss, targetNote);
+        Debug.Log($"判定详情: 时间差={diff:F3}, 目标色={targetNote.noteType}, 玩家色={playerColorState}");
     }
 
     private void ExecuteJudgment(JudgmentType type, NoteController note, bool isPassive = false)

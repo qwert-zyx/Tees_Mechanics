@@ -2725,8 +2725,8 @@ MonoBehaviour:
   perfectCount: 0
   goodCount: 0
   missCount: 0
-  perfectThreshold: 0.3
-  goodThreshold: 0.5
+  perfectThreshold: 0.2
+  goodThreshold: 1
   playerColorState: 1
   noteTravelTime: 5
   sheetMusic: []
