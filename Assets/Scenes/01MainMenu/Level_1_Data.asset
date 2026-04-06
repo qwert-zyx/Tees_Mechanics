@@ -15,19 +15,25 @@ MonoBehaviour:
   levelName: Level1
   musicClip: {fileID: 8300000, guid: 4a0b2336356d92e49a3eceadf0d6b420, type: 3}
   notes:
-  - time: 5
-    type: 1
   - time: 6
-    type: 2
-  - time: 7
-    type: 3
-  - time: 8
     type: 1
   - time: 9
     type: 2
-  - time: 10
+  - time: 7
+    type: 3
+  - time: 12
     type: 0
+  - time: 15
+    type: 2
+  - time: 18
+    type: 0
+  - time: 21
+    type: 1
   - time: 11
     type: 1
+  - time: 24
+    type: 2
+  - time: 27
+    type: 0
   nextLevel: {fileID: 11400000, guid: fcbefc8ba77103c4bbd6c0555ad60f40, type: 2}
   isTutorial: 1
