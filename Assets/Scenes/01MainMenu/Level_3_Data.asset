@@ -22,9 +22,9 @@ MonoBehaviour:
   - time: 0
     type: 0
   - time: 4
-    type: 3
+    type: 0
   - time: 5
-    type: 3
+    type: 0
   - time: 6
     type: 2
   - time: 7

@@ -26,9 +26,9 @@ MonoBehaviour:
   - time: 15
     type: 1
   - time: 17
-    type: 3
+    type: 0
   - time: 20
-    type: 3
+    type: 0
   - time: 0
     type: 0
   - time: 0

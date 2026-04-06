@@ -26,7 +26,7 @@ MonoBehaviour:
   - time: 9
     type: 2
   - time: 10
-    type: 3
+    type: 0
   - time: 11
     type: 1
   nextLevel: {fileID: 11400000, guid: fcbefc8ba77103c4bbd6c0555ad60f40, type: 2}

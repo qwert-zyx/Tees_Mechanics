@@ -175,27 +175,73 @@ public class TrackManager : MonoBehaviour
     public void ChangePlayerColor(int newColor) { playerColorState = newColor; if (judgmentLine != null) judgmentLine.SetBaseColor(newColor); }
     
     public void HandleHitInput()
+{
+    // ---------------------------------------------------------
+    // 情况 A：空打 (离音符太远，或者根本没音符)
+    // ---------------------------------------------------------
+    if (_activeNotes.Count == 0 || Mathf.Abs(GetSongTime() - _activeNotes[0].hitTime) > 0.3f) 
     {
-        if (_activeNotes.Count == 0 || Mathf.Abs(GetSongTime() - _activeNotes[0].hitTime) > 0.3f) 
-        {
-            TriggerFeedbackAction(targetPoint.position, Color.clear);
-            TriggerCameraShake(); SpawnJudgmentText("MISS", Color.gray); ResetCombo(); 
-            missCount++; 
-            return;
-        }
-
-        NoteController targetNote = _activeNotes[0];
-        float diff = Mathf.Abs(GetSongTime() - targetNote.hitTime);
-
-        if (targetNote.noteType == playerColorState) 
-        {
-            if (diff <= perfectThreshold) ExecuteJudgment(JudgmentType.Perfect, targetNote);
-            else if (diff <= goodThreshold) ExecuteJudgment(JudgmentType.Good, targetNote);
-            else ExecuteJudgment(JudgmentType.Miss, targetNote); 
-        }
-        else ExecuteJudgment(JudgmentType.Miss, targetNote);
-        Debug.Log($"判定详情: 时间差={diff:F3}, 目标色={targetNote.noteType}, 玩家色={playerColorState}");
+        TriggerFeedbackAction(targetPoint.position, Color.clear);
+        TriggerCameraShake(); 
+        SpawnJudgmentText("MISS", Color.gray); 
+        ResetCombo(); 
+        
+        missCount++; 
+        
+        string reason = (_activeNotes.Count == 0) ? "屏幕上没音符" : "离最近的音符太远(>0.3s)";
+        Debug.Log($"<color=orange>[空打 MISS]</color> 原因: {reason}");
+        return;
     }
+
+    NoteController targetNote = _activeNotes[0];
+    float diff = Mathf.Abs(GetSongTime() - targetNote.hitTime);
+
+    // ---------------------------------------------------------
+    // 情况 B：颜色不匹配 (点头了，时间也对，但姿态对不上)
+    // ---------------------------------------------------------
+    if (targetNote.noteType != playerColorState) 
+    {
+        string noteColor = GetColorName(targetNote.noteType);
+        string playerColor = GetColorName(playerColorState);
+        
+        Debug.Log($"<color=red>[颜色 MISS]</color> 判定失败！音符要求: {noteColor} | 你当前是: {playerColor}");
+        
+        ExecuteJudgment(JudgmentType.Miss, targetNote);
+        return;
+    }
+
+    // ---------------------------------------------------------
+    // 情况 C：颜色对了，看时间准不准
+    // ---------------------------------------------------------
+    if (diff <= perfectThreshold) 
+    {
+        ExecuteJudgment(JudgmentType.Perfect, targetNote);
+        Debug.Log($"<color=green>[判定成功]</color> Perfect! 偏差: {diff:F3}s");
+    }
+    else if (diff <= goodThreshold) 
+    {
+        ExecuteJudgment(JudgmentType.Good, targetNote);
+        Debug.Log($"<color=yellow>[判定成功]</color> Good! 偏差: {diff:F3}s");
+    }
+    else 
+    {
+        // 时间太晚了，即使颜色对了也算 Miss
+        Debug.Log($"<color=white>[时间 MISS]</color> 颜色对了但打得太晚！偏差: {diff:F3}s (门槛: {goodThreshold}s)");
+        ExecuteJudgment(JudgmentType.Miss, targetNote); 
+    }
+}
+
+// 辅助函数：把数字变成中文颜色名，Log 看起来更直观
+private string GetColorName(int type)
+{
+    switch(type) {
+        case 0: return "<color=red>红色(0)</color>";
+        case 1: return "<color=white>白色(1)</color>";
+        case 2: return "<color=cyan>蓝色(2)</color>";
+        // 【修改这里】：如果是未知的，把具体的数字打出来
+        default: return $"<color=yellow>未知({type})</color>"; 
+    }
+}
 
     private void ExecuteJudgment(JudgmentType type, NoteController note, bool isPassive = false)
     {
